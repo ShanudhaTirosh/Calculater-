@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Mathematics Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#8B5CF6',
+                        secondary: '#7C3AED',
+                        accent: '#A78BFA',
+                        success: '#10B981',
+                        destructive: '#EF4444'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .transition-all { transition: all 0.3s ease-in-out; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
+        .history-panel {
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+        }
+        .history-panel.show { transform: translateX(0); }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-violet-100 to-fuchsia-100 dark:from-gray-900 dark:to-violet-900">
+    <div class="container mx-auto px-4 py-8 max-w-4xl relative">
+        <!-- History Panel -->
+        <div id="historyPanel" class="history-panel fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-800 shadow-2xl p-4 z-50">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold dark:text-white">Calculation History</h3>
+                <button onclick="toggleHistory()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="historyList" class="custom-scrollbar overflow-y-auto h-full">
+                <!-- History items will be added here -->
+            </div>
+        </div>
+
+        <!-- Main Calculator Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-sm bg-opacity-90">
+            <!-- Header with Tools -->
+            <div class="p-4 bg-primary text-white">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-xl font-bold">Advanced Mathematics Calculator</h1>
+                    <div class="flex gap-2">
+                        <button onclick="toggleHistory()" class="p-2 hover:bg-secondary rounded-lg transition-colors">
+                            <i class="fas fa-history"></i>
+                        </button>
+                        <button onclick="toggleTheme()" class="p-2 hover:bg-secondary rounded-lg transition-colors">
+                            <i class="fas fa-moon dark:hidden"></i>
+                            <i class="fas fa-sun hidden dark:inline"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Display -->
+            <div class="p-6 bg-gray-50 dark:bg-gray-700">
+                <input type="text" id="expression" readonly 
+                    class="w-full bg-white dark:bg-gray-800 text-right text-2xl p-4 rounded-lg mb-2 shadow-inner focus:outline-none dark:text-white">
+                <div class="flex gap-2">
+                    <input type="text" id="result" readonly 
+                        class="flex-1 bg-white dark:bg-gray-800 text-right text-3xl font-bold p-4 rounded-lg shadow-inner focus:outline-none dark:text-white">
+                    <button onclick="copyResult()" class="p-4 bg-primary hover:bg-secondary text-white rounded-lg transition-colors">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Formula Selection -->
+            <div class="p-4 bg-gray-100 dark:bg-gray-700">
+                <select id="formulaSelect" onchange="handleFormulaSelect()" class="w-full p-2 rounded-lg dark:bg-gray-800 dark:text-white">
+                    <option value="">Select Formula Category</option>
+                    <optgroup label="Circle Mathematics">
+                        <option value="circleArea">Area of Circle (πr²)</option>
+                        <option value="circleCircumference">Circumference of Circle (2πr)</option>
+                        <option value="circleDiameter">Diameter (2r)</option>
+                        <option value="circleRadius">Radius (d/2)</option>
+                        <option value="arcLength">Arc Length (2πr × θ/360°)</option>
+                        <option value="sectorArea">Sector Area (πr² × θ/360°)</option>
+                    </optgroup>
+                    <optgroup label="Geometry">
+                        <option value="triangleArea">Triangle Area (½ × base × height)</option>
+                        <option value="rectangleArea">Rectangle Area (length × width)</option>
+                        <option value="squareArea">Square Area (side²)</option>
+                        <option value="trapezoidArea">Trapezoid Area (½(a+b)h)</option>
+                        <option value="pythagoras">Pythagorean Theorem (a²+b²=c²)</option>
+                    </optgroup>
+                    <optgroup label="Algebra">
+                        <option value="quadratic">Quadratic Formula (-b±√(b²-4ac))/(2a)</option>
+                        <option value="linearEquation">Linear Equation (y=mx+c)</option>
+                        <option value="slope">Slope Formula ((y₂-y₁)/(x₂-x₁))</option>
+                    </optgroup>
+                    <optgroup label="Volume & Surface Area">
+                        <option value="cubeVolume">Cube Volume (s³)</option>
+                        <option value="sphereVolume">Sphere Volume (4/3πr³)</option>
+                        <option value="cylinderVolume">Cylinder Volume (πr²h)</option>
+                        <option value="cuboidVolume">Cuboid Volume (l×w×h)</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <!-- Input Fields for Selected Formula -->
+            <div id="formulaInputs" class="p-4 bg-gray-50 dark:bg-gray-700 hidden">
+                <!-- Dynamically populated based on formula selection -->
+            </div>
+
+            <!-- Standard Calculator Keypad -->
+            <div class="p-4 gap-2 grid">
+                <!-- Memory and Clear Buttons -->
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="handleClear()" 
+                        class ="p-4 bg-destructive text-white rounded-lg transition-colors">C</button>
+                    <button onclick="handleMemory('M+')"
+                        class="p-4 bg-primary text-white rounded-lg transition-colors">M+</button>
+                    <button onclick="handleMemory('M-')"
+                        class="p-4 bg-primary text-white rounded-lg transition-colors">M-</button>
+                    <button onclick="handleMemory('MR')"
+                        class="p-4 bg-primary text-white rounded-lg transition-colors">MR</button>
+                </div>
+                <!-- Number and Operator Buttons -->
+                <div class="grid grid-cols-4 gap-2 mt-2">
+                    <button onclick="appendToExpression('7')"
+                        class="p-4 bg-gray-200 rounded-lg transition-colors">7</button>
+                    <button onclick="appendToExpression('8')"
+                        class="p-4 bg-gray-200 rounded-lg transition-colors">8</button>
+                    <button onclick="appendToExpression('9')"
+                        class="p-4 bg-gray-200 rounded-lg transition-colors">9</button>
+                    <button onclick="appendToExpression('/')"
+                        class="p-4 bg-primary text-white rounded-lg transition-colors">/</button>
+                    <button onclick="appendToExpression('4')"
+                        class="p-4 bg-gray-200 rounded-lg transition-colors">4</button>
+                    <button onclick="appendToExpression('5')"
+                        class="p-4 bg-gray-200 rounded-lg transition-colors">5</button>
+                    <button onclick="appendToExpression('6')"
+                        class="p-4 bg-gray-200 rounded-lg transition-colors">6</button>
+                    <button onclick="appendToExpression('*')"
+                        class="p-4 bg-primary text-white rounded-lg transition-colors">*</button>
+                    <button onclick="appendToExpression('1')"
+                        class="p-4 bg-gray-200 rounded-lg transition-colors">1</button>
+                    <button onclick="appendToExpression('2')"
+                        class="p-4 bg-gray-200 rounded-lg transition-colors">2</button>
+                    <button onclick="appendToExpression('3')"
+                        class="p-4 bg-gray-200 rounded-lg transition-colors">3</button>
+                    <button onclick="appendToExpression('-')"
+                        class="p-4 bg-primary text-white rounded-lg transition-colors">-</button>
+                    <button onclick="appendToExpression('0')"
+                        class="p-4 bg-gray-200 rounded-lg transition-colors">0</button>
+                    <button onclick="appendToExpression('.')"
+                        class="p-4 bg-gray-200 rounded-lg transition-colors">.</button>
+                    <button onclick="calculateResult()"
+                        class="p-4 bg-success text-white rounded-lg transition-colors">=</button>
+                    <button onclick="appendToExpression('+')"
+                        class="p-4 bg-primary text-white rounded-lg transition-colors">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let memory = 0;
+
+        function appendToExpression(value) {
+            const expressionInput = document.getElementById('expression');
+            expressionInput.value += value;
+        }
+
+        function calculateResult() {
+            const expressionInput = document.getElementById('expression');
+            const resultInput = document.getElementById('result');
+            try {
+                const result = eval(expressionInput.value);
+                resultInput.value = result;
+            } catch (error) {
+                resultInput.value = 'Error';
+            }
+        }
+
+        function handleClear() {
+            document.getElementById('expression').value = '';
+            document.getElementById('result').value = '';
+        }
+
+        function handleMemory(action) {
+            const resultInput = document.getElementById('result');
+            if (action === 'M+') {
+                memory += parseFloat(resultInput.value) || 0;
+            } else if (action === 'M-') {
+                memory -= parseFloat(resultInput.value) || 0;
+            } else if (action === 'MR') {
+                document.getElementById('expression').value += memory;
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+        }
+
+        function handleFormulaSelect() {
+            const selectedFormula = document.getElementById('formulaSelect').value;
+            const formulaInputs = document.getElementById('formulaInputs');
+            formulaInputs.innerHTML = ''; // Clear previous inputs
+            formulaInputs.classList.remove('hidden');
+
+            // Add input fields based on selected formula
+            switch (selectedFormula) {
+                case 'circleArea':
+                    formulaInputs.innerHTML = '<input type="number" id="circleRadius" placeholder="Enter radius" class="w-full p-2 rounded-lg dark:bg-gray-800 dark:text-white"><button onclick="calculateCircleArea()" class="p-2 bg-primary text-white rounded-lg">Calculate Area</button>';
+                    break;
+                case 'circleCircumference':
+                    formulaInputs.innerHTML = '<input type="number" id="circleRadiusCircumference" placeholder="Enter radius" class="w-full p-2 rounded-lg dark:bg-gray-800 dark:text-white"><button onclick="calculateCircleCircumference()" class="p-2 bg-primary text-white rounded-lg">Calculate Circumference</button>';
+                    break;
+                case 'triangleArea':
+                    formulaInputs.innerHTML = '<input type="number" id="triangleBase" placeholder="Enter base" class="w-full p-2 rounded-lg dark:bg-gray-800 dark:text-white"><input type="number" id="triangleHeight" placeholder="Enter height" class="w-full p-2 rounded-lg dark:bg-gray-800 dark:text-white"><button onclick="calculateTriangleArea()" class="p-2 bg-primary text-white rounded-lg">Calculate Area</button>';
+                    break;
+                // Add more cases for other formulas...
+                default:
+                    formulaInputs.classList.add('hidden');
+            }
+        }
+
+        function calculateCircleArea() {
+            const radius = parseFloat(document.getElementById('circleRadius').value);
+            if (!isNaN(radius)) {
+                const area = Math.PI * Math.pow(radius, 2);
+                document.getElementById('result').value = area.toFixed(2);
+            }
+        }
+
+        function calculateCircleCircumference() {
+            const radius = parseFloat(document.getElementById('circleRadiusCircumference').value);
+            if (!isNaN(radius)) {
+                const circumference = 2 * Math.PI * radius;
+                document.getElementById('result').value = circumference.toFixed(2);
+            }
+        }
+
+        function calculateTriangleArea() {
+            const base = parseFloat(document.getElementById('triangleBase').value);
+            const height = parseFloat(document.getElementById('triangleHeight').value);
+            if (!isNaN(base) && !isNaN(height)) {
+                const area = 0.5 * base * height;
+                document.getElementById('result').value = area.toFixed(2);
+            }
+        }
+
+        // Add more calculation functions for other formulas...
+    </script>
+</body>
+</html>
